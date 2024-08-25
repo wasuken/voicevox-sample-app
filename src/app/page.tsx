@@ -1,10 +1,19 @@
 "use client"
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 
 export default function Home() {
   const [text, setText] = useState<string>('');
+  const [voices, setVoices] = useState<string[]>([]);
   // 登録処理などが発生したら再実行する
-  const fetchWavFiles = async () => { }
+  const fetchWavFiles = async () => {
+    const res = await fetch(`/api/voices`);
+    if(res.ok) {
+      const j = await res.json();
+      setVoices(j);
+    }else {
+      alert('失敗');
+    }
+  }
   const handleSubmit = async () => {
     const body = JSON.stringify({
       text
@@ -21,6 +30,9 @@ export default function Home() {
       console.error(res)
     }
   }
+  useEffect(() => {
+    fetchWavFiles();
+  }, [])
   return (
     <>
       <div>
@@ -29,6 +41,13 @@ export default function Home() {
       <div>
         <button onClick={handleSubmit}>Submit</button>
       </div>
+      <ul>
+	{voices.map((path, i) => (
+	  <li key={i}>
+	    <a href={`/voice/${path}`}>{path}</a>
+	  </li>
+	))}
+      </ul>
     </>
   );
 }
