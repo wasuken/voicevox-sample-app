@@ -37,3 +37,5 @@ next-env.d.ts
 
 public/voice/*
 !public/voice/.gitkeep
+
+.env

@@ -3,15 +3,36 @@ import fs from 'fs';
 import path from 'path';
 import fetch from 'node-fetch';
 import { v4 as uuidv4 } from 'uuid';
+import { PrismaClient } from '@prisma/client'
+
+const prisma = new PrismaClient();
 
 export async function POST(request: NextRequest): NextResponse {
-  const { text, } = await request.json();
+  const { content, title } = await request.json();
   const fileName = uuidv4();
 
-  const result = await processTextToVoice(text, fileName);
+  const result = await processContentToVoice(content, fileName);
   if (!result.success) {
     return NextResponse.json(
       result,
+      {
+        status: 500,
+        headers: { 'Content-Type': 'application/json' },
+      }
+    );
+  }
+  try{
+    await prisma.Voice.create({
+      data: {
+	title,
+	content,
+	path: result.filePath,
+      }
+    })
+  }catch(e){
+    console.error(e);
+    return NextResponse.json(
+      { success: false, error: "Database Error"},
       {
         status: 500,
         headers: { 'Content-Type': 'application/json' },
@@ -29,10 +50,10 @@ export async function POST(request: NextRequest): NextResponse {
 }
 
 
-async function processTextToVoice(text: string, filename: string, speakerId: number = 0) {
+async function processContentToVoice(content: string, filename: string, speakerId: number = 0) {
   try {
     // Voicevox APIに送るリクエストデータを作成
-    const queryResponse = await fetch(`http://vv:50021/audio_query?speaker=${speakerId}&text=${text}`, {
+    const queryResponse = await fetch(`http://vv:50021/audio_query?speaker=${speakerId}&text=${content}`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/x-www-form-urlencoded',
@@ -41,7 +62,7 @@ async function processTextToVoice(text: string, filename: string, speakerId: num
 
     if (!queryResponse.ok) {
       console.error(queryResponse)
-      throw new Error(`Failed to fetch audio query for text: ${text}`);
+      throw new Error(`Failed to fetch audio query for text: ${content}`);
     }
 
     const queryJson = await queryResponse.json();
@@ -56,7 +77,7 @@ async function processTextToVoice(text: string, filename: string, speakerId: num
     });
 
     if (!synthesisResponse.ok) {
-      throw new Error(`Failed to synthesize audio for text: ${text}`);
+      throw new Error(`Failed to synthesize audio for text: ${content}`);
     }
 
     const audioBuffer = await synthesisResponse.arrayBuffer();
@@ -73,7 +94,7 @@ async function processTextToVoice(text: string, filename: string, speakerId: num
 
     return { success: true, filePath: `/voice/${wavFileName}` };
   } catch (error) {
-    console.error('Error processing text:', text, error.message);
+    console.error('Error processing content:', content, error.message);
     return { success: false, error: error.message };
   }
 }

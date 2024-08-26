@@ -1,9 +1,16 @@
 "use client"
 import { useState, useEffect } from 'react';
 
+interface Voice {
+  title: string;
+  content: string;
+  path: string;
+}
+
 export default function Home() {
-  const [text, setText] = useState<string>('');
-  const [voices, setVoices] = useState<string[]>([]);
+  const [content, setContent] = useState<string>('');
+  const [title, setTitle] = useState<string>('');
+  const [voices, setVoices] = useState<Voice[]>([]);
   // 登録処理などが発生したら再実行する
   const fetchWavFiles = async () => {
     const res = await fetch(`/api/voices`);
@@ -11,12 +18,13 @@ export default function Home() {
       const j = await res.json();
       setVoices(j);
     }else {
-      alert('失敗');
+      alert('fetch: failed');
     }
   }
   const handleSubmit = async () => {
     const body = JSON.stringify({
-      text
+      title,
+      content
     })
     const res = await fetch(`/api/voice`, {
       method: 'POST',
@@ -24,9 +32,12 @@ export default function Home() {
       headers: { 'Content-Type': 'application/json' }
     })
     if (res.ok) {
-      alert('成功');
+      alert('post: success');
+      setTitle('');
+      setContent('');
+      fetchWavFiles();
     } else {
-      alert('失敗');
+      alert('post: failed');
       console.error(res)
     }
   }
@@ -36,7 +47,17 @@ export default function Home() {
   return (
     <>
       <div>
-        <textarea defaultValue={text} onChange={(e) => setText(e.target.value)}></textarea>
+	<input
+	  type="text"
+	  defaultValue={title}
+	  value={title}
+	  onChange={(e) => setTitle(e.target.value)} />
+      </div>
+      <div>
+        <textarea
+	  defaultValue={content}
+	  value={content}
+	  onChange={(e) => setContent(e.target.value)}></textarea>
       </div>
       <div>
         <button onClick={handleSubmit}>Submit</button>
