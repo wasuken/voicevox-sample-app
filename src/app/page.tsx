@@ -2,6 +2,7 @@
 import { useState, useEffect } from 'react';
 
 interface Voice {
+  id: number;
   title: string;
   content: string;
   path: string;
@@ -63,9 +64,9 @@ export default function Home() {
         <button onClick={handleSubmit}>Submit</button>
       </div>
       <ul>
-	{voices.map((path, i) => (
+	{voices.map((v, i) => (
 	  <li key={i}>
-	    <a href={`/voice/${path}`}>{path}</a>
+	    <a href={v.path}>{v.title}</a>
 	  </li>
 	))}
       </ul>
