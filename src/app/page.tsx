@@ -1,5 +1,6 @@
 "use client"
 import { useState, useEffect } from 'react';
+import { TextField, Button, List, ListItem, ListItemText, Container, Typography, Box } from '@mui/material';
 
 interface Voice {
   id: number;
@@ -12,16 +13,18 @@ export default function Home() {
   const [content, setContent] = useState<string>('');
   const [title, setTitle] = useState<string>('');
   const [voices, setVoices] = useState<Voice[]>([]);
+
   // 登録処理などが発生したら再実行する
   const fetchWavFiles = async () => {
     const res = await fetch(`/api/voices`);
-    if(res.ok) {
+    if (res.ok) {
       const j = await res.json();
       setVoices(j);
-    }else {
+    } else {
       alert('fetch: failed');
     }
   }
+
   const handleSubmit = async () => {
     const body = JSON.stringify({
       title,
@@ -39,37 +42,58 @@ export default function Home() {
       fetchWavFiles();
     } else {
       alert('post: failed');
-      console.error(res)
+      console.error(res);
     }
   }
+
   useEffect(() => {
     fetchWavFiles();
   }, [])
+
   return (
-    <>
-      <div>
-	<input
-	  type="text"
-	  defaultValue={title}
-	  value={title}
-	  onChange={(e) => setTitle(e.target.value)} />
-      </div>
-      <div>
-        <textarea
-	  defaultValue={content}
-	  value={content}
-	  onChange={(e) => setContent(e.target.value)}></textarea>
-      </div>
-      <div>
-        <button onClick={handleSubmit}>Submit</button>
-      </div>
-      <ul>
-	{voices.map((v, i) => (
-	  <li key={i}>
-	    <a href={v.path}>{v.title}</a>
-	  </li>
-	))}
-      </ul>
-    </>
+    <Container maxWidth="sm">
+      <Box sx={{ my: 4 }}>
+        <Typography variant="h4" component="h1" gutterBottom>
+          Voice Uploader
+        </Typography>
+
+        <TextField
+          fullWidth
+          label="Title"
+          variant="outlined"
+          margin="normal"
+          value={title}
+          onChange={(e) => setTitle(e.target.value)}
+        />
+
+        <TextField
+          fullWidth
+          label="Content"
+          variant="outlined"
+          margin="normal"
+          multiline
+          rows={4}
+          value={content}
+          onChange={(e) => setContent(e.target.value)}
+        />
+
+        <Button
+          variant="contained"
+          color="primary"
+          onClick={handleSubmit}
+          sx={{ mt: 2 }}
+        >
+          Submit
+        </Button>
+
+        <List sx={{ mt: 4 }}>
+          {voices.map((v, i) => (
+            <ListItem key={i} component="a" href={v.path} button>
+              <ListItemText primary={v.title} />
+            </ListItem>
+          ))}
+        </List>
+      </Box>
+    </Container>
   );
 }
