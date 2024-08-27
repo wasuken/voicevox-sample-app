@@ -17,5 +17,5 @@ model Voice {
   id    Int     @id @default(autoincrement())
   title String
   content String  @db.Text
-  path String
+  path String?
 }
